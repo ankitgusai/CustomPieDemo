@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">CustomPieDemo</string>
+    <string-array name="dash_donut_items_disabled">
+        <item>@drawable/space</item>
+        <item>@drawable/space</item>
+        <item>@drawable/space</item>
+        <item>@drawable/space</item>
+        <item>@drawable/space</item>
+        <item>@drawable/space</item>
+        <item>@drawable/space</item>
+        <item>@drawable/space</item>
+        <item>@drawable/space</item>
+    </string-array>
+    <integer-array name="dash_donut_items_color">
+        <item>@color/item_one_color</item>
+        <item>@color/item_two_color</item>
+        <item>@color/item_three_color</item>
+        <item>@color/item_four_color</item>
+        <item>@color/item_five_color</item>
+        <item>@color/item_six_color</item>
+        <item>@color/item_seven_color</item>
+        <item>@color/item_eight_color</item>
+        <item>@color/item_nine_color</item>
+    </integer-array>
+</resources>

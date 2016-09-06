@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="PieCircleView">
+        <attr name="pie_width" format="integer" />
+        <attr name="section_colors" format="reference" />
+        <attr name="section_count" format="reference" />
+        <attr name="section_drawables" format="reference" />
+    </declare-styleable>
+
+</resources>
