@@ -1,20 +1,17 @@
 package com.ankit.custompiedemo.views;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.graphics.Rect;
 import android.graphics.RectF;
-import android.graphics.drawable.Drawable;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.graphics.ColorUtils;
+import android.support.v4.util.Pair;
 import android.util.AttributeSet;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.MotionEvent;
@@ -55,7 +52,7 @@ public class PieCircleView extends ImageView {
     /**
      * Radius of the doughnut.
      */
-    private int doughnutRadius;
+    private int pieRadius;
 
     /**
      * Radius of the drawn image on parent ImageView
@@ -65,7 +62,7 @@ public class PieCircleView extends ImageView {
     /**
      * Actually width (in dp) over which item arcs will be drawn
      */
-    private int doughnutStrokeWidthPx;
+    private int pieStrokeWidthPx;
 
     /**
      * Each drawn arc's start and stop angles references
@@ -77,7 +74,7 @@ public class PieCircleView extends ImageView {
      ***********************************
      */
 
-    private int halfDoughnutStrokeWidthPx;
+    private int halfPieStrokeWidthPx;
 
     /*
     *center of the view
@@ -95,11 +92,12 @@ public class PieCircleView extends ImageView {
 
 
     //New Parameters
-    int[] section_colors;
-    int[] section_drawables;
-    int section_count;
+    /**
+     * Only for layout editor
+     */
+    int debug_section_count;
     int pie_width;
-    private DisplayMetrics metrics;
+    private List<Item> items;
 
 
     /**
@@ -137,40 +135,31 @@ public class PieCircleView extends ImageView {
     }
 
     private void init(AttributeSet attrs) {
-        metrics = new DisplayMetrics();
         readXmlTags(attrs);
 
         arcCoordinates = new ArrayList<>();
-        doughnutStrokeWidthPx = (int) getPixelFromDp(pie_width);
-        halfDoughnutStrokeWidthPx = doughnutStrokeWidthPx / 2;
+        pieStrokeWidthPx = (int) getPixelFromDp(pie_width);
+        halfPieStrokeWidthPx = pieStrokeWidthPx / 2;
+        lineColor = ContextCompat.getColor(getContext(), android.R.color.black);
 
         paintArc = getArcPaint();
         paintLine = getDividerPaint();
 
         ovalArc = new RectF();
-
         if (isInEditMode()) {
             setDummyData();
+            setBackgroundColor(ColorUtils.setAlphaComponent(ContextCompat.getColor(getContext(), android.R.color.black), 64));
         }
 
+        setImageResource(R.drawable.space);
+        setScaleType(ScaleType.FIT_XY);
     }
 
     private void readXmlTags(AttributeSet attrs) {
         if (attrs == null) return;
         final TypedArray array = getContext().obtainStyledAttributes(attrs, R.styleable.PieCircleView);
-        section_count = array.getInteger(R.styleable.PieCircleView_section_count, 0);
+        debug_section_count = array.getInteger(R.styleable.PieCircleView_debug_section_count, 0);
         pie_width = array.getInteger(R.styleable.PieCircleView_pie_width, 0);
-
-        final int section_color_ids = array.getResourceId(R.styleable.PieCircleView_section_colors, 0);
-        final int section_color_drawables = array.getResourceId(R.styleable.PieCircleView_section_drawables, 0);
-
-        if (section_color_ids != 0) {
-            section_colors = getResources().getIntArray(section_color_ids);
-        }
-
-        if (section_color_ids != 0) {
-            section_drawables = getResources().getIntArray(section_color_drawables);
-        }
 
         array.recycle();
     }
@@ -180,38 +169,7 @@ public class PieCircleView extends ImageView {
         this.itemCliCkListener = itemClickListeners;
     }
 
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        //super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-
-        /*
-                 ____________
-                |            |
-                |------------|
-                |  |      |  |
-                |  |      |  |
-                |------------|
-                |            |
-                |            |
-                |            |
-
-
-
-            ____________________
-           |                   |
-           |   |           |   |
-           |   |           |   |
-           |   |           |   |
-           |                   |
-
-
-                Ideally we would want something like this for both orientation. our pie would just
-                fit inside the square
-
-
-         */
-
-
+    private Pair<Integer, Integer> measureHeightWidth(int widthMeasureSpec, int heightMeasureSpec) {
         int desiredWidth = Integer.MAX_VALUE;
         int desiredHeight = Integer.MAX_VALUE;
 
@@ -247,66 +205,55 @@ public class PieCircleView extends ImageView {
             height = desiredHeight;
         }
 
-        printLog(pie_width + " Width " + width + "  Height " + height);
+        return new Pair<>(width, height);
 
+    }
+
+    private void calculatePieVariables(int width, int height) {
+        //as we know exact size we can calculate center point
         centerX = width / 2;
         centerY = height / 2;
 
+        //Landscape mode
         if (width > height) {
-            //Landscape mode
-            width = height;
             squareSize = height;
 
-        } else {
             //portrait
-            height = width / 2;
-            squareSize = height;
+        } else {
+            squareSize = width;
         }
+
+
+        pieRadius = squareSize / 2 - pieStrokeWidthPx;
+
+
+        int w = width / 2 - squareSize / 2;
+        int t = height / 2 - squareSize / 2;
+        int r = w + squareSize;
+        int bo = t + squareSize;
+
+        ovalArc.set(w + pieStrokeWidthPx, t + pieStrokeWidthPx, r - pieStrokeWidthPx, bo - pieStrokeWidthPx);
+
+    }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+
+        int width;
+        int height;
+
+        Pair<Integer, Integer> pair = measureHeightWidth(widthMeasureSpec, heightMeasureSpec);
+        width = pair.first;
+        height = pair.second;
+
+        printLog(pie_width + " Width " + width + "  Height " + height);
 
         //MUST CALL THIS
         setMeasuredDimension(width, height);
 
-
-        doughnutRadius = squareSize / 2 - doughnutStrokeWidthPx;
-
-
-        int w = getWidth() / 2 - squareSize / 2;
-        int t = getHeight() / 2 - squareSize / 2;
-        int r = w + squareSize;
-        int bo = t + squareSize;
-
-        ovalArc.set(w + doughnutStrokeWidthPx, t + doughnutStrokeWidthPx, r - doughnutStrokeWidthPx, bo - doughnutStrokeWidthPx);
-
-
-
+        calculatePieVariables(width, height);
     }
 
-    /*@Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-
-        // Get image matrix values and place them in an array
-        float[] f = new float[9];
-        getImageMatrix().getValues(f);
-
-        // Extract the scale values using the constants (if aspect ratio maintained, scaleX == scaleY)
-        final float scaleX = f[Matrix.MSCALE_X];
-        //final float scaleY = f[Matrix.MSCALE_Y];
-
-        // Get the drawable (could also get the bitmap behind the drawable and getWidth/getHeight)
-        final Drawable d = getDrawable();
-        final int origW = d.getIntrinsicWidth();
-        //final int origH = d.getIntrinsicHeight();
-
-        // Calculate the actual dimensions
-        final int actW = Math.round(origW * scaleX);
-        //final int actH = Math.round(origH * scaleY);
-
-        //as the source image we set is square we only require one dimension
-        sourceImageRadious = actW / 2;
-
-        //Log.e("DBG", "["+origW+","+origH+"] -> ["+actW+","+actH+"] & scales: x="+scaleX+" y="+scaleY);
-    }*/
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -347,19 +294,18 @@ public class PieCircleView extends ImageView {
     @Override
     protected void onDraw(Canvas canvas) {
 
-        if (section_count == 0) {
+        if (items == null || items.isEmpty()) {
             super.onDraw(canvas);
             return;
-            //No Items to inflate
-        }
 
+        }
         paintLine.setColor(lineColor);
 
         ArcCoordinate arcCoordinate;
-        int arcSweepAngle = 360 / section_count;
+        int arcSweepAngle = 360 / items.size();
 
-        for (int i = 0; i < section_count; i++) {
-            paintArc.setColor(ContextCompat.getColor(mContext, section_colors[i]));
+        for (int i = 0; i < items.size(); i++) {
+            paintArc.setColor(ContextCompat.getColor(mContext, items.get(i).color));
 
             arcCoordinate = arcCoordinates.get(i);
 
@@ -372,53 +318,53 @@ public class PieCircleView extends ImageView {
 
             int countDegree = arcCoordinate.startAngle;
 
-            float line1InX = getCirclePerimeterPointX(
+            float innerX = getCirclePerimeterPointX(
                     centerX,
-                    doughnutRadius + halfDoughnutStrokeWidthPx,
+                    pieRadius + halfPieStrokeWidthPx,
                     countDegree
             );
 
-            float line1InY = getCirclePerimeterPointY(
+            float innerY = getCirclePerimeterPointY(
                     centerY,
-                    doughnutRadius + halfDoughnutStrokeWidthPx,
+                    pieRadius + halfPieStrokeWidthPx,
                     countDegree
             );
 
-            float line1OutX = getCirclePerimeterPointX(
+            float outerX = getCirclePerimeterPointX(
                     centerX,
-                    doughnutRadius - halfDoughnutStrokeWidthPx,
+                    pieRadius - halfPieStrokeWidthPx,
                     countDegree
             );
 
-            float line1OutY = getCirclePerimeterPointY(
+            float outerY = getCirclePerimeterPointY(
                     centerY,
-                    doughnutRadius - halfDoughnutStrokeWidthPx,
+                    pieRadius - halfPieStrokeWidthPx,
                     countDegree
             );
 
-            canvas.drawLine(line1InX, line1InY, line1OutX, line1OutY, paintLine);
+            canvas.drawLine(innerX, innerY, outerX, outerY, paintLine);
 
             /*
             *Draw thumb in center of the arc
             * ****************
              */
-            int countDegree2 = arcCoordinate.startAngle + (360 / (section_count * 2));
+            int countDegree2 = arcCoordinate.startAngle + (360 / (items.size() * 2));
 
             float x = getCirclePerimeterPointX(
                     centerX,
-                    doughnutRadius,
+                    pieRadius,
                     countDegree2
             );
 
             float y = getCirclePerimeterPointY(
                     centerY,
-                    doughnutRadius,
+                    pieRadius,
                     countDegree2
             );
 
             //Bitmap b = getRespectiveBitmap(i);
             //FIXME This need to be done only once when user sets item.
-            Bitmap b = BitmapFactory.decodeResource(getResources(), section_drawables[i]);
+            Bitmap b = BitmapFactory.decodeResource(getResources(), items.get(i).getIcon());
 
             canvas.drawBitmap(b, x - b.getWidth() / 2, y - b.getHeight() / 2, paintLine);
 
@@ -426,11 +372,12 @@ public class PieCircleView extends ImageView {
         super.onDraw(canvas);
     }
 
-    public void setData(int section_count, int[] section_colors, int[] section_drawables) {
+    public void setData(List<Item> items) {
+        this.items = items;
 
-        for (int i = 0; i < section_count; i++) {
+        for (int i = 0; i < items.size(); i++) {
 
-            int arcSweepAngle = 360 / section_count;
+            int arcSweepAngle = 360 / items.size();
             int arcStartAngle = (arcSweepAngle * i) + 270 - (arcSweepAngle / 2);
 
             //saving Coordinates of all items
@@ -497,7 +444,7 @@ public class PieCircleView extends ImageView {
     private Paint getArcPaint() {
         Paint mPaint = new Paint();
         mPaint.setStyle(Paint.Style.STROKE);
-        mPaint.setStrokeWidth(doughnutStrokeWidthPx);
+        mPaint.setStrokeWidth(pieStrokeWidthPx);
         mPaint.setAntiAlias(true);
         return mPaint;
     }
@@ -591,8 +538,8 @@ public class PieCircleView extends ImageView {
             return -1;
         }
 
-        if (pointRadius < doughnutRadius - doughnutStrokeWidthPx / 2
-                || pointRadius > doughnutRadius + doughnutStrokeWidthPx / 2) {
+        if (pointRadius < pieRadius - pieStrokeWidthPx / 2
+                || pointRadius > pieRadius + pieStrokeWidthPx / 2) {
             return -2;
         }
 
@@ -607,39 +554,45 @@ public class PieCircleView extends ImageView {
     }
 
 
+    public static class Item {
+        int color;
+        int icon;
+
+        public Item(int color, int icon) {
+            this.color = color;
+            this.icon = icon;
+        }
+
+        public int getColor() {
+            return color;
+        }
+
+        public void setColor(int color) {
+            this.color = color;
+        }
+
+        public int getIcon() {
+            return icon;
+        }
+
+        public void setIcon(int icon) {
+            this.icon = icon;
+        }
+    }
+
+
     /*
      *  Dummy data
      *********************************
      */
 
     private void setDummyData() {
-        pie_width = 20;
-        int[] dummy_section_colors = new int[]{
-                R.color.item_one_color,
-                R.color.item_two_color,
-                R.color.item_three_color,
-                R.color.item_four_color,
-                R.color.item_five_color,
-                R.color.item_six_color,
-                R.color.item_seven_color,
-                R.color.item_eight_color,
-                R.color.item_nine_color};
+        List<Item> items = new ArrayList<>();
+        for (int i = 0; i < debug_section_count; i++) {
+            items.add(new Item(R.color.colorAccent, R.drawable.space));
+        }
 
-        int[] dummy_section_drawables = new int[]{
-                R.drawable.space,
-                R.drawable.space,
-                R.drawable.space,
-                R.drawable.space,
-                R.drawable.space,
-                R.drawable.space,
-                R.drawable.space,
-                R.drawable.space,
-                R.drawable.space
-        };
-        int dummy_section_count = dummy_section_colors.length;
-
-        setData(dummy_section_count, dummy_section_colors, dummy_section_drawables);
-
+        setData(items);
     }
 
 

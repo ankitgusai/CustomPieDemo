@@ -2,9 +2,7 @@
 <resources>
     <declare-styleable name="PieCircleView">
         <attr name="pie_width" format="integer" />
-        <attr name="section_colors" format="reference" />
-        <attr name="section_count" format="reference" />
-        <attr name="section_drawables" format="reference" />
+        <attr name="debug_section_count" format="integer" />
     </declare-styleable>
 
 </resources>

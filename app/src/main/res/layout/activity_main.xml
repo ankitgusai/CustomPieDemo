@@ -10,16 +10,14 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.ankit.custompiedemo.MainActivity">
-ndroid:layout_height="match_parent" />
+
 
     <com.ankit.custompiedemo.views.PieCircleView
         android:id="@+id/View_2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        pie:pie_width="20"
-        pie:section_colors="@array/dash_donut_items_color"
-        pie:section_drawables="@array/dash_donut_items_disabled"
-        />
+        android:layout_width="match_parent"
+        pie:debug_section_count="5"
+        pie:pie_width="30"
+        android:layout_height="wrap_content" />
 
 
 </RelativeLayout>
