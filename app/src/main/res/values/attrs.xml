@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <declare-styleable name="PieCircleView">
-        <attr name="pie_width" format="integer" />
+        <attr name="pie_width" format="dimension" />
+        <attr name="divider_color" format="color" />
         <attr name="debug_section_count" format="integer" />
+
     </declare-styleable>
 
 </resources>

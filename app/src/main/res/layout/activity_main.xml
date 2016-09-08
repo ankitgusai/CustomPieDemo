@@ -13,11 +13,12 @@
 
 
     <com.ankit.custompiedemo.views.PieCircleView
-        android:id="@+id/View_2"
-        android:layout_width="match_parent"
-        pie:debug_section_count="5"
-        pie:pie_width="30"
-        android:layout_height="wrap_content" />
+        android:id="@+id/pieChartView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        pie:debug_section_count="8"
+        pie:pie_width="40dp"
+        />
 
 
 </RelativeLayout>
