@@ -6,8 +6,8 @@ This is a simple Pie like view.
 There are tons of readymade libs available already, but if you have something specific to implement and dont know how to start this might be helpful. 
 
  * This is more of a guide, the code is fairly documented and each step is well explained. key parts are,
-    * Math that used to the point using circle equations
-    * Click listener implemented for arch section(piece of pie)
+    * Math that used to locate the point using circle equations
+    * Click listener implemented for arc section(piece of pie)
 
 Three are four step i have taken to build the View.
     -Measurement and calculation
