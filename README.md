@@ -9,12 +9,14 @@ There are tons of readymade libs available already, but if you have something sp
     * Math that used to locate the point using circle equations
     * Click listener implemented for arc section(piece of pie)
 
-Three are four step i have taken to build the View.
-    -Measurement and calculation
-    -View Draw
-    -Item Click
-    -Animation(this is still not implemented)
-    
+ * the View creation is roughly divided into four part
+    * Measurement and calculation
+    * View Draw
+    * Item Click
+    * Animation(this is still not implemented)
+
+If you dont know where to begin follow `init > onMeasure > setData > onTouchEvent`
+
 There are three attributes that can be used via xml    
 
 ```Java
