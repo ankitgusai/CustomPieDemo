@@ -11,7 +11,7 @@ Three are four step i have taken to build the View.
     -Item Click
     -Animation(this is still not implemented)
     
-There are three atributes that can be used via xml    
+There are three attributes that can be used via xml    
 
 ```Java
         <attr name="pie_width" format="dimension" />
@@ -26,6 +26,6 @@ The `debug_section_count` is only for android studio layout preview. to populate
 
 As this is more of a guide, the code is fairly documented and each step is well explained. key parts are,
     -Math that used to the point using circle equations.
-    -Click listner implemented for arch section(piece of pie).
+    -Click listener implemented for arch section(piece of pie).
     
 
