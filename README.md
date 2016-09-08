@@ -3,7 +3,11 @@
 <img src="/ScreenShots/device-2016-09-08-124743.png" width="540" height="960"/>
 
 This is a simple Pie like view. 
-There are tons of readymade libs available already, but if you have something specific to implement and dont know how to start this might be helpful. this is more of a tutorial.
+There are tons of readymade libs available already, but if you have something specific to implement and dont know how to start this might be helpful. 
+
+ * This is more of a guide, the code is fairly documented and each step is well explained. key parts are,
+    * Math that used to the point using circle equations
+    * Click listener implemented for arch section(piece of pie)
 
 Three are four step i have taken to build the View.
     -Measurement and calculation
@@ -24,8 +28,5 @@ The `debug_section_count` is only for android studio layout preview. to populate
         public void setData(List<Item> items)
 ```
 
-As this is more of a guide, the code is fairly documented and each step is well explained. key parts are,
-    -Math that used to the point using circle equations.
-    -Click listener implemented for arch section(piece of pie).
-    
+
 
